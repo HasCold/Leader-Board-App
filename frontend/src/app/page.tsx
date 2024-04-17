@@ -15,8 +15,7 @@ const page = () => {
       createdOn: new Date().toISOString()
     }
 
-    const res = await addPlayerAction(payLoad);
-    const data = await res.json(); 
+    const {data} = await addPlayerAction(payLoad);
     console.log("Data: -", data);
   }
 
