@@ -1,6 +1,8 @@
 export type PlayerInfoProps = {
     playerId: number;
-    playerNum: string;
+    playerName: string;
     score: number;
     createdOn: string;
 }
+
+export type ProcessDataProps = Pick<PlayerInfoProps, "playerId" | "score"> 

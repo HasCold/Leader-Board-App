@@ -5,29 +5,56 @@ const Redis = require ("ioredis");
 
 dotenv.config();
 
-const client = new Redis({
-    password: process.env.REDIS_CLIENT_PASSWORD,
-    host: process.env.REDIS_CLIENT_HOST,
-    port: process.env.REDIS_CLIENT_PORT
-})
-
 const app = express();
 
 app.use(cors());
 app.use(express.json());  // To accept the JSON data from frontend
+app.use(express.urlencoded({extended: true}));
+
+const redisClient = new Redis();
+redisClient.on("ready", () => {
+    console.log("Redis Producer Server is Successfully Running");
+})
+
+redisClient.on("error", (error) => {
+    console.log(error.message);
+})
 
 const streamName = "myStream";
 
 app.post("/api/prod/addPlayer", async (req, res) => {
+    try {
+        const data = req.body;
+        if(!data) return res.status(404).json({"message": "Data not provided"});
+
+        await redisClient.hset("players", data);  
+        const dataPlayer = await redisClient.hgetall("players");
+
+        res.status(200).send({
+            success: true,
+            message: "Player Added Successfully",
+            dataPlayer
+        })
+        
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({
+            sucess: false,
+            message: `Error in adding player ${error.message}`
+        })
+    }
+});
+
+app.post("/api/prod/processData", async (req, res) => {
     const data = req.body;
     console.log("Player Info ______", req.body);
     try {
 
         if(!data) return res.status(404).json({"message": "Data not provided"});
-        await client.xadd(streamName, "*", "player", JSON.stringify(data));  
+        await redisClient.xadd(streamName, "*", `player ${data.playerId}`, data.score);  
 
         res.status(200).send({
-            sucess: true,
+            success: true,
             message: "Player Added Successfully"
         })
         
