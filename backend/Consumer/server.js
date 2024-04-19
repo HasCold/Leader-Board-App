@@ -9,15 +9,8 @@ const server = http.createServer(app);
 
 app.use(cors());
 app.use(express.json());  // To accept the JSON data from frontend
-// app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({extended: true}));
 
-// const _io = new Server(app.listen(5000, () => {
-//     console.log('Consumer running on port 5000');
-// }), {
-//     cors: {
-//         origin: "http://localhost:3000"
-//     }
-// });
 const _io = new Server(server, {
     cors: {
         origin: "http://localhost:3000"
