@@ -27,13 +27,12 @@ app.post("/api/prod/addPlayer", async (req, res) => {
         const data = req.body;
         if(!data) return res.status(404).json({"message": "Data not provided"});
 
-        await redisClient.hset("players", data);  
-        const dataPlayer = await redisClient.hgetall("players");
+        await redisClient.hset("players", `playerId ${data.playerId}`, JSON.stringify(data));  
+        // const dataPlayer = await redisClient.hgetall("players");
 
         res.status(200).send({
             success: true,
             message: "Player Added Successfully",
-            dataPlayer
         })
         
     } catch (error) {
@@ -46,15 +45,13 @@ app.post("/api/prod/addPlayer", async (req, res) => {
 });
 
 app.post("/api/prod/processData", async (req, res) => {
-    const data = req.body;
-    console.log("Player Info ______", req.body);
     try {
+        const data = req.body;
 
         if(!data) return res.status(404).json({"message": "Data not provided"});
-        await redisClient.xadd(streamName, "*", `player ${data.playerId}`, data.score);  
+        await redisClient.xadd(streamName, "*", `playerId ${data.playerId}`, data.score);  
 
         res.status(200).send({
-            success: true,
             message: "Player Added Successfully"
         })
         
@@ -72,7 +69,6 @@ const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
     console.log(`Producer Server is running on ${PORT}`)
 });
-
 
 // ---------------------------- REDIS COMMAND ------------------------------
 

@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from 'react'
 import {addPlayerAction, processDataAction } from './actions/actions';
-import { PlayerInfoProps } from './types';
+import { PlayerInfoProps, ProcessDataProps} from './types';
+import { io } from 'socket.io-client';
 
 const Page = () => {
 
@@ -12,19 +13,17 @@ const Page = () => {
 
     const num = Math.round(Math.random() * 100);
     const payLoad = {
-      playerId: num,
+      playerId: `${num}`,
       playerName: `Gamer ${num}`,
       score: 0,
       createdOn: new Date().toISOString()
     }
 
-    const data = await addPlayerAction(payLoad);
-    if(data){
+    await addPlayerAction(payLoad);
       setPlayerInfo([
         ...playerInfo || [],
-        data
+        payLoad
       ]);
-    }
   }
 
   const processData = async (player: PlayerInfoProps) => {
@@ -34,20 +33,48 @@ const Page = () => {
     }
 
     const data = await processDataAction(payLoad);
-    if(data){
-      setPlayerInfo([
-        ...playerInfo || [],
-        data
-      ]);
+    console.log("D--------------", data);
+  }
+
+  const socketHandle =  (player: ProcessDataProps) => {
+    const {playerId, score} = player;
+
+    if(playerInfo && playerInfo.length){
+
+      for(let i = 0; i < playerInfo?.length; i++){
+        if(playerInfo[i].playerId === playerId){
+          playerInfo[i].score = score;
+        }
+      }
+    }
+
+    const element = document.getElementById(playerId.toString());
+    if(element){
+      playerInfo && setPlayerInfo([...playerInfo]);
+      
+      element.classList.add("highLight");
+      setTimeout(() => {
+        element.classList.remove("highLight");
+      }, 1000); 
     }
   }
 
   useEffect(() => {
-    if(playerInfo){
-      console.log("PlayerInfo", playerInfo[0]);
+    if(!playerInfo){
+      return;
     }
 
-  }, [playerInfo]);
+  const _socket = io("http://localhost:5000");
+
+    _socket.on("player-event", socketHandle);
+
+
+    return () => {  // This is cleanup function when the components unmounts or user reconnect so it will go through
+      _socket.disconnect();
+      // _socket.off("player-event");
+      console.log("Component Remounts");
+    }
+  },[playerInfo]);
 
   return (
     <div className='flex gap-4 flex-col'>
@@ -91,7 +118,7 @@ const Page = () => {
               <div key={index} className="flex justify-between font-bold border-solid border-b-2">
                 <div className="basis-1/4 self-center p-3">{player.playerId}</div>
                 <div className="basis-1/4 self-center p-3">{player.playerName}</div>
-                <div id={player?.playerId.toString()} className="basis-1/4 self-center p-3">{player.score}</div>
+                <div id={player.playerId} className="basis-1/4 self-center p-3">{player.score}</div>                
                 <div className="basis-1/4 self-center p-3">{player.createdOn}</div>
               </div>
             ))

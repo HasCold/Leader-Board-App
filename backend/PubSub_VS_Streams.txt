@@ -1,0 +1,5 @@
+The main difference between Pub Sub model and Streams is that :- 
+
+Pub/Sub :-  In pub sub redis, when someone publish the data so it must be necessary that opposite entity is ready to catch or activated to subscribe those messages/data if it dosen't happen so that data will gone means the data can't persist in the Redis.   
+
+Streams (Consumer | Producer) :- In the case of streams, first the data is send to the streams and persist into the redis server then the consumer will read that data and process the data accordingly.  
